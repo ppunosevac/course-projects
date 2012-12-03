@@ -1,0 +1,38 @@
+\documentclass{article}
+\usepackage{amsmath}
+\begin {document}
+
+
+\begin{description}
+#for $bf in $bfs
+	#if $bf.error
+		$bf.error
+		#continue
+	#end if
+        \item[$bf.latex()] \hfill \\
+	\begin{tabular}{
+	#repeat len($bf.args)+1 
+	|c 
+	#end repeat 
+	|}
+	\hline
+
+	$bf.args[0] #slurp
+	#for $arg in $bf.args[1:]
+		& $arg #slurp
+	#end for
+	& $bf.name \\
+	\hline
+	#for $row in $bf.truth_table()
+		
+		$row[0] #slurp
+		#for $val in $row[1:]
+			& $val #slurp
+		#end for
+		\\
+	#end for
+	\hline
+	\end{tabular}
+#end for
+\end{description}
+\end{document}

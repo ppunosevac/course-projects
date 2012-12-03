@@ -1,0 +1,84 @@
+\documentclass{article}
+\title{Modeling the Chaotic Pendulum in MATLAB}
+\author{Elijah Coleman \and Emily Herndon \and Andrew Mays \and Chris Cutler \and Chris Larson \and Bill Bodenhamer}
+\date{}
+
+\begin{document}
+\maketitle
+\begin{abstract}
+We have created a function to model the bevavior of two periodically forced pendulums started very close in their phase space. We have incorporated the existing function ode45 in our code. Our final code is gives a movie as output and is of the form, chaos(initial values 1, initial values 2, maximum time, time map value, file name, speed of movie).
+\end{abstract}
+\section{Introduction}
+The chaotic pendulum we will be modelling is the periodically forced pendulum, meaning that a periodic force is applied to an otherwise normal pendulum. This pendulum swing in only two dimensions and can be modeled with the equations
+\begin{eqnarray}
+\dot{\theta}&=&\omega \\
+\dot{\omega}&=&-\sin{\theta} + \epsilon \cos{t}
+\end{eqnarray}
+where $\theta$ is the angle of the pedulum measured from the lowest position of the pendulum, $\omega$ is the angular velocity, and $t$ is time. 
+These equations have their solution in the $\theta$ vs. $\omega$ phase space, so, in order to create a graph, we will take a ``snapshot" at certain intervals in the extended phase space and project those points onto the phase space. This time of graph is called a time $x$ map where $x$ is the interval between the ``snapshots". To create these plots we have to numerically integrate the system of equations 1 \& 2 by using the Runge-Kutta Method. Because these equations are extremely sensitive to error we have to re-evaluate at much smaller intervals. We want to see the relationship between two pendulums started very close together, so we evaluated for two systems.
+
+
+\section{Methods}
+Equations marked with a $*$ are evaluated for both pendulum 1 and 2. \\ \\
+In order to solve this system with ode45 we first have to define it as a function in the form \\
+\begin{center}
+\texttt{function(t,y)}
+\end{center}
+This means that we have to express $\theta$ and $\omega$ as two elements of a vector. So we will define our function as \\
+\begin{center}
+\texttt{function  rr=cps(t,y) \\
+epsilon = .01;  \\
+rr = [y(2); -sin(y(1))+epsilon*cos(t)];}
+\end{center}
+
+We can now insert our system into ode45 as follows
+
+\begin{center}
+\texttt{[t1,p1] = ode45(@cps,timespan,initial values 1, options}*
+\end{center}							
+This gives us an output as a vector where t1 is the time and p1 is the vector [theta1,omega1]. To increase the accuracy of this method we reduced the step size, so we set the options as
+\begin{center}
+\texttt{options = odeset('MaxStep',(time(2)-time(1))/1000)}
+\end{center}
+We now have a solved system, but it is not in the form that we want it in, so we need to get these at the values corresponding to the intervals defined by the time map. So what we do is interpolate between each point, here we have done this linearly.\\
+We define
+\begin{center}
+\texttt{time\_space = 0 : time map value : maximum time}
+\end{center}
+and with these points we interpolate
+\begin{center}
+\texttt{theta1\_space = interp1(t1,p1(:,1),time\_space,'linear')}* \\
+\texttt{omega1\_space = interp1(t1,p1(:,2),time\_space,'linear')}*
+\end{center}
+thus producing quantized data for both $\theta$ and $\omega$. Now we have the ability to create this time map, but if we graphed it now we would have a plot that extended to $\theta$ values beyond $-\pi$ and $\pi$. This is not what we want, we want a plot that has been normalized between $-\pi$ and $\pi$. To do this we need to subtract the number of full rotations it has made from the total angle. We do this with the code
+\begin{center}
+\texttt{for k = max(size(theta1\_space))}* \\
+\texttt{theta1\_space\_-pi2pi(k) = theta1\_space(k)-2*pi*(round(theta1\_space(k)/2/pi)))}*
+\end{center}
+We now have all the data we want, but we need to plot it. So what we will do is plot the function point by point and take a picture each time a point is added. In order to do this we need to pre-define the axis so they won't jump around. To make sure that our graph still accomodates for all of the points we need to set y-axis values that change with the data, our x-axis data has been set to between $-\pi$ and $\pi$ so those will be our axis limits. For the y-axis we define our max axis value as
+\begin{center}
+\texttt{axis\_val = max([-omega1\_space,omega1\_space])}* \\
+\end{center}
+We can now plot our function, but in order to take a picture of each new point we have to use a for loop
+\begin{center}
+\texttt{figure(1);hold;grid;axis([-pi pi -axis\_val axis\_val])} \\
+\texttt{for k = 1:max(size(time\_space))} \\
+\texttt{plot(theta1\_space\_-pi2pi(k),omega1\_space(k),'.g' \\ ,theta2\_space\_-pipi(k),omega2\_space(k),'.b')} \\
+\texttt{H(k) = getframe; \\ W(k) = getframe(gcf);}
+\end{center}
+We must also label our axes and title our plot
+\begin{center}
+\texttt{xlabel('$\backslash$theta (rad)','Fontsize',16)} \\
+\texttt{ylabel('$\backslash$omega (rad/s)','Fontsize',16)} \\
+\texttt{title('$\backslash$it($\backslash$bf(Two Chaotic Pendulums))','Fontsize',16)} \\
+\end{center}
+We now define our movies.
+\begin{center}
+\texttt{movie(H,1,speed)} \\
+\texttt{movie2avi(W,'filename','compression','None','fps',speed)} \\
+\end{center}
+This allows you to watch the movie as it is being created and later on as a separate file.
+
+
+
+\end{document}
